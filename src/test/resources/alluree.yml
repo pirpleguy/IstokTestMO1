@@ -1,0 +1,6 @@
+﻿allure:
+  version: 2.24.0
+  autoconfigure: true
+  aspectjweaver: true
+  junit5:
+    version: 2.24.0
