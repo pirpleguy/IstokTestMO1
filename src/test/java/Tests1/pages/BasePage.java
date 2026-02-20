@@ -69,10 +69,10 @@ public abstract class BasePage {
                     .setPath(screenshotPath)
                     .setFullPage(true));
 
-            System.out.println("✅ Скриншот сохранен: " + fileName);
+            System.out.println("Скриншот сохранен: " + fileName);
 
         } catch (Exception e) {
-            System.err.println("❌ Ошибка при сохранении скриншота: " + e.getMessage());
+            System.err.println("Ошибка при сохранении скриншота: " + e.getMessage());
         }
     }
 
