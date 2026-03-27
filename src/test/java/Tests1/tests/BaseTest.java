@@ -34,6 +34,7 @@ public abstract class BaseTest {
 
     private boolean needVideo = false;
 
+    // Регистрируем расширение для автоматического захвата видео при падении теста
     @RegisterExtension
     AfterTestExecutionCallback callback = context -> {
         Optional<Throwable> exception = context.getExecutionException();
@@ -43,11 +44,15 @@ public abstract class BaseTest {
         }
     };
 
+    // ==================== НАСТРОЙКА ПЕРЕД ВСЕМИ ТЕСТАМИ ====================
+
     @BeforeAll
     public void initBrowser() {
+        // Создаем Playwright и браузер
         playwright = Playwright.create();
         browser = BrowserManager.getBrowser(playwright);
 
+        // Записываем информацию о окружении в Allure отчет
         allureEnvironmentWriter(
                 ImmutableMap.<String, String>builder()
                         .put("Platform", System.getProperty("os.name"))
@@ -59,31 +64,46 @@ public abstract class BaseTest {
                 config().allureResultsDir() + "/");
     }
 
+    // ==================== НАСТРОЙКА ПЕРЕД КАЖДЫМ ТЕСТОМ ====================
+
     @BeforeEach
     public void createContextAndPage() {
+        // Создаем контекст браузера (с видео или без)
         if (config().video()) {
             context = browser.newContext(new Browser.NewContextOptions()
                     .setRecordVideoDir(Paths.get(config().videoDir()))
-                    .setAcceptDownloads(true));
+                    .setAcceptDownloads(true)
+                    .setViewportSize(1920, 1080));
         } else {
-            context = browser.newContext();
+            context = browser.newContext(new Browser.NewContextOptions()
+                    .setViewportSize(1920, 1080));
         }
 
+        // Создаем страницу
         page = context.newPage();
+        page.setDefaultTimeout(config().timeout());
+
+        // Создаем страницу логина через фабрику
         loginPage = createInstance(LoginPage.class);
     }
 
+    // ==================== ОЧИСТКА ПОСЛЕ КАЖДОГО ТЕСТА ====================
+
     @AfterEach
     public void closeContext() {
+        // Закрываем контекст (видео сохраняется здесь)
         if (context != null) {
             context.close();
         }
 
+        // Если тест упал и нужно видео — прикрепляем его к отчету
         if (config().video() && needVideo) {
             captureVideo();
         }
         needVideo = false;
     }
+
+    // ==================== ЗАВЕРШЕНИЕ ====================
 
     @AfterAll
     public void closeBrowser() {
@@ -95,24 +115,46 @@ public abstract class BaseTest {
         }
     }
 
-    @Attachment(value = "Скриншот при падении", type = "image/png")
-    private byte[] captureScreenshot() {
-        return page.screenshot();
-    }
+    // ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
 
-    @Attachment(value = "Видео теста", type = "video/webm")
-    @SneakyThrows
-    private byte[] captureVideo() {
-        return Files.readAllBytes(page.video().path());
-    }
-
+    /**
+     * Создает экземпляр страницы через фабрику
+     */
     protected <T extends BasePage> T createInstance(Class<T> pageClass) {
         return BasePageFactory.createInstance(page, pageClass);
     }
 
+    /**
+     * Выводит красивый заголовок в консоль
+     */
     protected void printHeader(String testName) {
         System.out.println("\n" + "=".repeat(60));
         System.out.println(testName);
         System.out.println("=".repeat(60));
+    }
+
+    // ==================== ПРИКРЕПЛЕНИЕ ВЛОЖЕНИЙ К ALLURE ====================
+
+    /**
+     * Делает скриншот и прикрепляет его к Allure отчету (вызывается автоматически при падении)
+     */
+    @Attachment(value = "Скриншот при падении", type = "image/png")
+    private byte[] captureScreenshot() {
+        if (page != null) {
+            return page.screenshot();
+        }
+        return new byte[0];
+    }
+
+    /**
+     * Прикрепляет видео к Allure отчету (вызывается автоматически при падении)
+     */
+    @Attachment(value = "Видео теста", type = "video/webm")
+    @SneakyThrows
+    private byte[] captureVideo() {
+        if (page != null && page.video() != null) {
+            return Files.readAllBytes(page.video().path());
+        }
+        return new byte[0];
     }
 }

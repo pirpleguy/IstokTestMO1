@@ -43,11 +43,11 @@ public abstract class BasePage {
         page.waitForSelector(selector);
     }
 
-    protected void waitForTimeout(int millis) {
+    public void waitForTimeout(int millis) {
         page.waitForTimeout(millis);
     }
 
-    protected void waitForLoadState() {
+    public void waitForLoadState() {
         page.waitForLoadState();
     }
 

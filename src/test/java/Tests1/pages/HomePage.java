@@ -46,22 +46,6 @@ public class HomePage extends BasePage {
         return BasePageFactory.createInstance(page, DevicesPage.class);
     }
 
-    @Step("Перейти на страницу программ мониторинга")
-    public TaskPage navigateToTaskPage() {
-        openBurgerMenu();
-        sideNavMenu.clickOnTasks();
-        waitForLoadState();
-        return BasePageFactory.createInstance(page, TaskPage.class);
-    }
-
-    @Step("Перейти на страницу подписок")
-    public SubscriptionPage navigateToSubscriptionPage() {
-        openBurgerMenu();
-        sideNavMenu.clickOnSubscriptions();
-        waitForLoadState();
-        takeScreenshot("navigate-to-subscriptions");
-        return BasePageFactory.createInstance(page, SubscriptionPage.class);
-    }
 
     @Step("Проверить, что главная страница загружена")
     public boolean isHomePageLoaded() {

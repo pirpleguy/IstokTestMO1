@@ -10,4 +10,5 @@ public class DeviceEntity {
     private String model;
     private String status;
     private String manufacturer;
+    private String type;
 }
